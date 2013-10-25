@@ -200,7 +200,7 @@ public class ClassFileParser extends AbstractParser {
     private String parseSuperClassName() throws IOException {
         int entryIndex = in.readUnsignedShort();
         String superClassName = getClassConstantName(entryIndex);
-        addImport(getPackageName(superClassName));
+        addImport(superClassName);
 
         debug("Parser: super class name = " + superClassName);
         
@@ -213,7 +213,7 @@ public class ClassFileParser extends AbstractParser {
         for (int i = 0; i < interfacesCount; i++) {
             int entryIndex = in.readUnsignedShort();
             interfaceNames[i] = getClassConstantName(entryIndex);
-            addImport(getPackageName(interfaceNames[i]));
+            addImport(interfaceNames[i]);
 
             debug("Parser: interface = " + interfaceNames[i]);
         }
@@ -230,7 +230,7 @@ public class ClassFileParser extends AbstractParser {
             debug("Parser: field descriptor = " + descriptor);
             String[] types = descriptorToTypes(descriptor);
             for (int t = 0; t < types.length; t++) {
-                addImport(getPackageName(types[t]));
+                addImport(types[t]);
                 debug("Parser: field type = " + types[t]);
             }
         }
@@ -248,7 +248,7 @@ public class ClassFileParser extends AbstractParser {
             String[] types = descriptorToTypes(descriptor);
             for (int t = 0; t < types.length; t++) {
                 if (types[t].length() > 0) {
-                    addImport(getPackageName(types[t]));
+                    addImport(types[t]);
                     debug("Parser: method type = " + types[t]);
                 }
             }
@@ -368,7 +368,7 @@ public class ClassFileParser extends AbstractParser {
         for (int j = 1; j < constantPool.length; j++) {
             if (constantPool[j].getTag() == CONSTANT_CLASS) {
                 String name = toUTF8(constantPool[j].getNameIndex());
-                addImport(getPackageName(name));
+                addImport(name);
 
                 debug("Parser: class type = " + slashesToDots(name));
             }
@@ -411,7 +411,7 @@ public class ClassFileParser extends AbstractParser {
 		while (visitedAnnotations < numAnnotations) {
 	    	int typeIndex = u2(data, index);
 	    	int numElementValuePairs = u2(data, index = index + 2);
-	        addImport(getPackageName(toUTF8(typeIndex).substring(1)));
+	        addImport(toUTF8(typeIndex).substring(1));
 	        int visitedElementValuePairs = 0;
 	        index += 2;
 	        while (visitedElementValuePairs < numElementValuePairs) {
@@ -441,13 +441,13 @@ public class ClassFileParser extends AbstractParser {
     			
     		case 'e':
     			int enumTypeIndex = u2(data, index);
-    			addImport(getPackageName(toUTF8(enumTypeIndex).substring(1)));
+    			addImport(toUTF8(enumTypeIndex).substring(1));
     			index += 4;
     			break;
     			
     		case 'c':
     			int classInfoIndex = u2(data, index);
-    			addImport(getPackageName(toUTF8(classInfoIndex).substring(1)));
+    			addImport(toUTF8(classInfoIndex).substring(1));
     			index += 2;
     			break;
     			
@@ -489,7 +489,8 @@ public class ClassFileParser extends AbstractParser {
                 + entryIndex);
     }
 
-    private void addImport(String importPackage) {
+    protected void addImport(String importName) {
+        String importPackage = getPackageName( importName );
         if ((importPackage != null) && (getFilter().accept(importPackage))) {
             jClass.addImportedPackage(new JavaPackage(importPackage));
         }

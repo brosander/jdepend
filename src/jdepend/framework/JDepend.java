@@ -1,7 +1,11 @@
 package jdepend.framework;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.StringTokenizer;
 
 /**
  * The <code>JDepend</code> class analyzes directories of Java class files 
@@ -105,7 +109,7 @@ public class JDepend {
     private HashMap packages;
     private FileManager fileManager;
     private PackageFilter filter;
-    private ClassFileParser parser;
+    private AbstractParser parser;
     private JavaClassBuilder builder;
     private Collection components;
 
@@ -114,15 +118,18 @@ public class JDepend {
     }
 
     public JDepend(PackageFilter filter) {
-
+        this(filter, new FileManager(), new ClassFileParser(filter));
+    }
+    
+    public JDepend(PackageFilter filter, FileManager fileManager, AbstractParser parser) {
         setFilter(filter);
-
+        
+        this.fileManager = fileManager;
+        this.parser = parser;
+  
         this.packages = new HashMap();
-        this.fileManager = new FileManager();
-
-        this.parser = new ClassFileParser(filter);
         this.builder = new JavaClassBuilder(parser, fileManager);
-
+  
         PropertyConfigurator config = new PropertyConfigurator();
         addPackages(config.getConfiguredPackages());
         analyzeInnerClasses(config.getAnalyzeInnerClasses());

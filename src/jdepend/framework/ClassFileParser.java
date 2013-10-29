@@ -31,12 +31,20 @@ public class ClassFileParser extends AbstractParser {
     public static final int ACC_INTERFACE = 0x200;
     public static final int ACC_ABSTRACT = 0x400;
     
+    protected JavaClassFactory javaClassFactory = new JavaClassFactory() {
+      
+      @Override
+      public JavaClass createJavaClass( String name ) {
+        return new JavaClass(name);
+      }
+    };
+    
     private String fileName;
     private String className;
     private String superClassName;
     private String interfaceNames[];
     private boolean isAbstract;
-    private JavaClass jClass;
+    protected JavaClass jClass;
     private Constant[] constantPool;
     private FieldOrMethodInfo[] fields;
     private FieldOrMethodInfo[] methods;
@@ -99,7 +107,7 @@ public class ClassFileParser extends AbstractParser {
 
         reset();
 
-        jClass = new JavaClass("Unknown");
+        jClass = javaClassFactory.createJavaClass("Unknown");
 
         in = new DataInputStream(is);
 
@@ -496,21 +504,33 @@ public class ClassFileParser extends AbstractParser {
         }
     }
 
-    private String slashesToDots(String s) {
+    protected String slashesToDots(String s) {
         return s.replace('/', '.');
     }
-
-    private String getPackageName(String s) {
-        if ((s.length() > 0) && (s.charAt(0) == '[')) {
-            String types[] = descriptorToTypes(s);
-            if (types.length == 0) {
-                return null; // primitives
-            }
-
-            s = types[0];
+    
+    protected String getClassName(String s) {
+      if ((s.length() > 0) && (s.charAt(0) == '[')) {
+        String types[] = descriptorToTypes(s);
+        if (types.length == 0) {
+            return null; // primitives
         }
 
-        s = slashesToDots(s);
+        s = types[0];
+      }
+  
+      s = slashesToDots(s);
+      int index = s.lastIndexOf("$");
+      if (index > 0) {
+          s = s.substring(0, index);
+      }
+      return s;
+    }
+
+    protected String getPackageName(String s) {
+        s = getClassName( s );
+        if (s == null) {
+          return null;
+        }
         int index = s.lastIndexOf(".");
         if (index > 0) {
             return s.substring(0, index);
